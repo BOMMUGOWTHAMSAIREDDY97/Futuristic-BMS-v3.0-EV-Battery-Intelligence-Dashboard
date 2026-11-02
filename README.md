@@ -206,15 +206,4 @@ The dashboard includes a dedicated **NASA Prognostics Center of Excellence (PCoE
 | Fonts | Google Fonts (Orbitron, Inter) |
 | Design | Dark theme, glassmorphism, CSS animations |
 
----
 
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-- Add new sensor integrations (e.g., cell balancing, GPS)
-- Implement historical data export (CSV/PDF)
-- Add user authentication for the dashboard
-- Build a mobile-responsive version
-- Write unit tests for the front-end and server
-
-Please open an issue or submit a pull request.
