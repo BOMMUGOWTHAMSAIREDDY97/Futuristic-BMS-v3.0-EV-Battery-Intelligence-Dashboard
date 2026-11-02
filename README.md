@@ -22,25 +22,30 @@ This repository contains a **real‑time EV battery monitoring web application**
 ## Getting Started
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/BOMMUGOWTHAMSAIREDDY97/excel.git
    cd excel
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up the database**
+
    ```bash
    sqlite3 ev_bms.db < setup.sql
    ```
 
 4. **Run the development server**
+
    ```bash
    npm start   # or: node server.js
    ```
+
    The dashboard will be available at `http://localhost:3000`.
 
 ---
@@ -78,18 +83,10 @@ This repository contains a **real‑time EV battery monitoring web application**
 ## Contributing
 
 Contributions are welcome! Feel free to:
+
 - Improve UI/UX (add charts, dark‑mode toggles, etc.).
 - Refactor the back‑end (add TypeScript, improve error handling).
 - Write unit tests for the API routes.
 
 Please open an issue or submit a pull request.
-
----
-
-## License
-
-This project is licensed under the **MIT License** – see the `LICENSE` file for details.
-
----
-
 
