@@ -1,92 +1,220 @@
-# EV Battery Monitoring Dashboard
+# ⚡ Futuristic BMS v3.0 — EV Battery Intelligence Dashboard
+
+A **real-time EV Battery Management System (BMS) dashboard** that streams live telemetry from an **ESP-32 microcontroller** to a futuristic web interface via **Supabase** (PostgreSQL + Realtime WebSockets). Includes NASA PCoE research-grade SOH degradation analytics.
 
 ---
 
-## Overview
+## 📸 Overview
 
-This repository contains a **real‑time EV battery monitoring web application** built with **Node.js**, **Express**, and a lightweight front‑end using **HTML**, **CSS**, and **JavaScript**.  The project connects to an ESP‑32 based Battery Management System (BMS) to collect voltage, current, temperature, and state‑of‑charge data, stores it in a SQLite database, and visualises the metrics on a responsive dashboard.
-
----
-
-## Key Features
-
-- **Live telemetry** from the ESP‑32 BMS (`esp32_bms.ino`).
-- **REST API** (`server.js`) for fetching recent sensor data.
-- **SQLite persistence** (`setup.sql`) with helper scripts for data simulation (`simulate-data.js`).
-- **Responsive UI** (`index.html`, `style.css`, `script.js`) showing charts and gauges.
-- **Health‑check utilities** (`check-data.js`, `check-db.js`).
-- **Docker‑ready** (add a `Dockerfile` if you want container deployment).
+The dashboard visualises battery health in real time with:
+- Animated battery fill indicator with wave effects
+- Canvas-based speedometer gauges for voltage & temperature
+- Four live-updating Chart.js time-series graphs
+- NASA PCoE benchmark section with degradation curves
+- Full diagnostic event engine with fault logging
+- Automatic connection state detection (Live / Disconnected / Showing Previous Data)
 
 ---
 
-## Getting Started
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/BOMMUGOWTHAMSAIREDDY97/excel.git
-   cd excel
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Set up the database**
-
-   ```bash
-   sqlite3 ev_bms.db < setup.sql
-   ```
-
-4. **Run the development server**
-
-   ```bash
-   npm start   # or: node server.js
-   ```
-
-   The dashboard will be available at `http://localhost:3000`.
-
----
-
-## Project Structure
+## 🏗️ Architecture
 
 ```
-├─ .gitignore               # Git ignore patterns
-├─ .env (optional)         # Environment variables
-├─ ESP32_BMS.ino            # Firmware for the ESP‑32 BMS
-├─ index.html               # Dashboard UI
-├─ style.css                # Styling (modern, dark‑mode ready)
-├─ script.js                # Front‑end logic (fetches API data)
-├─ server.js                # Express server & API routes
-├─ package.json             # NPM metadata & scripts
-├─ setup.sql                # SQLite schema & seed data
-├─ simulate-data.js         # Generates mock telemetry data
-├─ check-data.js            # Simple health‑check for incoming data
-├─ check-db.js              # Verifies DB connectivity
-└─ README.md                # ← **You are here**
+ESP-32 (Hardware)              Supabase (Cloud)               Browser (Dashboard)
+┌──────────────────┐     POST  ┌─────────────────────┐  Realtime WS  ┌──────────────────┐
+│  INA219 (V/I)    │──────────▶│  PostgreSQL          │──────────────▶│  index.html      │
+│  DS18B20 (Temp)  │    JSON   │  battery_data table  │   + Polling   │  script.js       │
+│  OLED SSD1306    │           │  RLS enabled         │    backup     │  Chart.js        │
+│  Relay / Fan     │           │  Realtime pub/sub    │               │  Canvas gauges   │
+└──────────────────┘           └─────────────────────┘               └──────────────────┘
 ```
 
 ---
 
-## Usage
+## 🔑 Key Features
 
-- **Live data**: Ensure the ESP‑32 is flashed with `esp32_bms.ino` and connected to the same network as the server. The device will POST JSON payloads to `/api/telemetry`.
-- **Simulated data**: Run `node simulate-data.js` to feed dummy data into the DB for UI testing.
-- **API reference**
-  - `GET /api/telemetry/latest` – Returns the most recent reading.
-  - `GET /api/telemetry/history?limit=N` – Returns the last `N` records.
+### Hardware (ESP-32 Firmware — `esp32_bms.ino`)
+- **INA219** current/voltage sensor via I²C (SDA=21, SCL=22)
+- **DS18B20** temperature sensor on GPIO 4 (OneWire)
+- **SSD1306 OLED** display (128×64) showing V, I, Temp, SOC, SOH, and fault status
+- **Safety protection**: Relay cuts load at >50°C or >4.25V; buzzer alarm on critical faults
+- **Cooling fan**: Auto-activates at >40°C, deactivates at <35°C
+- **Cloud upload**: Sends JSON to Supabase REST API every 10 seconds over HTTPS
+
+### Cloud Backend (Supabase)
+- **PostgreSQL** table `battery_data` with columns: `voltage`, `current`, `temperature`, `soc`, `soh`, `relay_status`, `rul`
+- **Row Level Security (RLS)** enabled with public read + service-role insert policies
+- **Realtime** publication for instant WebSocket push to connected dashboards
+- Schema defined in `setup.sql`
+
+### Web Dashboard (Front-End)
+- **Real-time data streaming** via Supabase JS SDK (`@supabase/supabase-js@2`)
+- **Dual data pipeline**: WebSocket realtime subscription + 5-second polling backup
+- **Connection state management**: 25-second health watchdog detects ESP-32 disconnect/reconnect
+- **4 time-series charts** (Chart.js): Voltage Timeline, Current Dynamics, Thermal Stability, SOC Discharge
+- **2 canvas speedometer gauges**: Voltage (0–4.5V) and Temperature (0–80°C)
+- **Animated battery visualiser**: Fluid wave fill, colour changes based on SOC level (red <20%, yellow <45%, green ≥45%)
+- **Stats grid**: Instant current (A), power flow (kW), temperature stability (°C), cooling fan status, relay status
+- **Live data stream table**: Last 50 readings in scrollable table
+- **Diagnostic events engine**: Fault log with timestamps and severity levels (system, success, warn, crit)
+- **Alert banner**: Triggered for thermal runaway (>52°C), sensor disconnect (-127°C), voltage depletion (<3.2V)
+- **NASA PCoE Research Section**: SOH degradation scatter plot (B0005 dataset, 168 cycles), predictive sensor feature importance bar chart, live SOH prediction formula
+- **SOH & RUL tracking**: State-of-Health bar, Remaining Useful Life (cycle count) prediction
+- **IST timestamps**: All times displayed in Asia/Kolkata timezone
+- **Typography**: Orbitron (headings) + Inter (body) from Google Fonts
+- **Dark theme** with glassmorphism, scanline overlay, noise texture, and mesh background
+
+### Local Server (`server.js`)
+- Lightweight Node.js HTTP static file server on port 3000
+- Serves `index.html`, `style.css`, `script.js`, and image assets
+- Content-type detection for HTML, CSS, JS, JSON, PNG, JPG
 
 ---
 
-## Contributing
+## 📊 Database Schema
+
+```sql
+CREATE TABLE public.battery_data (
+    id           BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    created_at   TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    voltage      DOUBLE PRECISION NOT NULL,
+    current      DOUBLE PRECISION NOT NULL,
+    temperature  DOUBLE PRECISION NOT NULL,
+    soc          DOUBLE PRECISION NOT NULL,
+    soh          DOUBLE PRECISION NOT NULL,
+    relay_status BOOLEAN DEFAULT TRUE NOT NULL,
+    rul          INT DEFAULT 250
+);
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- **Node.js** (v18+)
+- **ESP-32** dev board with INA219, DS18B20, SSD1306 OLED (for hardware mode)
+- **Supabase** project (free tier works)
+- **Arduino IDE** with ESP32 board support + libraries: `WiFi`, `Adafruit_INA219`, `DallasTemperature`, `Adafruit_SSD1306`, `HTTPClient`
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/BOMMUGOWTHAMSAIREDDY97/excel.git
+cd excel
+```
+
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+### 3. Configure Supabase
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Run `setup.sql` in the Supabase SQL Editor to create the table, RLS policies, and enable realtime
+3. Update `SUPABASE_URL` and `SUPABASE_ANON_KEY` in both `script.js` (front-end) and `esp32_bms.ino` (firmware)
+
+### 4. Flash the ESP-32
+1. Open `esp32_bms.ino` in Arduino IDE
+2. Update WiFi credentials (`ssid`, `password`) and Supabase URL/key
+3. Wire sensors: INA219 (I²C), DS18B20 (GPIO 4), Relay (GPIO 23), Fan (GPIO 19), Buzzer (GPIO 18)
+4. Upload to ESP-32
+
+### 5. Run the Dashboard
+```bash
+npm start   # or: node server.js
+```
+Open `http://localhost:3000` in your browser.
+
+### 6. Simulate Data (No Hardware)
+```bash
+node simulate-data.js
+```
+Generates 100 data points (50 discharge + 50 charge cycles) directly into Supabase for UI testing.
+
+---
+
+## 📁 Project Structure
+
+```
+├── .env                    # Supabase PostgreSQL connection string
+├── .gitignore              # Git ignore patterns
+├── esp32_bms.ino           # ESP-32 Arduino firmware (sensors + cloud upload)
+├── index.html              # Dashboard UI (279 lines)
+├── style.css               # Dark-theme styling with glassmorphism (22KB)
+├── script.js               # Front-end logic: charts, gauges, realtime (739 lines)
+├── server.js               # Node.js static file server (port 3000)
+├── setup.sql               # Supabase/PostgreSQL schema + RLS policies
+├── simulate-data.js        # Generate mock charge/discharge data
+├── check-data.js           # Verify incoming telemetry data
+├── check-db.js             # Test database connectivity
+├── ev_car.png              # EV vehicle graphic asset
+├── package.json            # NPM config (ev-bms-dashboard v3.0.0)
+├── EV_Battery/             # NASA PCoE battery dataset files
+└── README.md               # This file
+```
+
+---
+
+## 🔧 Configuration
+
+| Parameter | Location | Default | Description |
+|-----------|----------|---------|-------------|
+| `POLL_INTERVAL` | `script.js` | 1500 ms | Chart update interval |
+| `HISTORY_LEN` | `script.js` | 200 | Max data points retained in charts |
+| `TEMP_WARM` | `script.js` | 42°C | Warning threshold |
+| `TEMP_CRIT` | `script.js` | 52°C | Critical alert threshold |
+| `VOLT_LOW` | `script.js` | 3.2V | Low voltage alert threshold |
+| `CURR_HIGH` | `script.js` | 8.0A | High current threshold |
+| `uploadInterval` | `esp32_bms.ino` | 10000 ms | Cloud upload frequency |
+| `sensorInterval` | `esp32_bms.ino` | 500 ms | Sensor read frequency |
+| `DISCONNECT_THRESHOLD` | `script.js` | 25000 ms | ESP-32 offline detection |
+
+---
+
+## 🛡️ Safety Logic (ESP-32)
+
+| Condition | Action |
+|-----------|--------|
+| Temperature > 50°C | Relay cuts load, buzzer alarm |
+| Voltage > 4.25V | Relay cuts load, buzzer alarm |
+| Temperature > 40°C | Cooling fan activates |
+| Temperature < 35°C | Cooling fan deactivates |
+| WiFi disconnected | Auto-reconnect attempt |
+
+---
+
+## 🧠 NASA PCoE Research Section
+
+The dashboard includes a dedicated **NASA Prognostics Center of Excellence (PCoE)** benchmark section based on the B0005/B0006/B0007/B0018 Li-ion battery datasets:
+
+- **SOH Degradation Curve**: Scatter plot of 168 discharge cycles showing exponential capacity fade
+- **Feature Importance**: Horizontal bar chart showing predictive sensor weights (Avg Voltage: 42%, Avg Current: 28%, Avg Temperature: 18%, Cycle Index: 12%)
+- **Model Metrics**: R² Score = 0.9842, RMSE = 0.1245%
+- **Live Prediction**: Real-time SOH prediction using current sensor readings with temperature penalty model
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Microcontroller | ESP-32 (Arduino C++) |
+| Sensors | INA219 (V/I), DS18B20 (Temp), SSD1306 (OLED) |
+| Cloud Database | Supabase (PostgreSQL + Realtime) |
+| Backend Server | Node.js (native HTTP) |
+| Front-End | HTML5, CSS3, Vanilla JavaScript |
+| Charts | Chart.js |
+| Fonts | Google Fonts (Orbitron, Inter) |
+| Design | Dark theme, glassmorphism, CSS animations |
+
+---
+
+## 🤝 Contributing
 
 Contributions are welcome! Feel free to:
-
-- Improve UI/UX (add charts, dark‑mode toggles, etc.).
-- Refactor the back‑end (add TypeScript, improve error handling).
-- Write unit tests for the API routes.
+- Add new sensor integrations (e.g., cell balancing, GPS)
+- Implement historical data export (CSV/PDF)
+- Add user authentication for the dashboard
+- Build a mobile-responsive version
+- Write unit tests for the front-end and server
 
 Please open an issue or submit a pull request.
-
